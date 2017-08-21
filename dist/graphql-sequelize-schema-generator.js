@@ -13,7 +13,8 @@ var _require2 = require('graphql-sequelize'),
     resolver = _require2.resolver,
     attributeFields = _require2.attributeFields,
     defaultListArgs = _require2.defaultListArgs,
-    defaultArgs = _require2.defaultArgs;
+    defaultArgs = _require2.defaultArgs,
+    JSONType = _require2.JSONType;
 
 /**
  * Returns the association fields of an entity.
@@ -114,7 +115,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
   return new GraphQLObjectType({
     name: 'Root_Mutations',
     fields: Object.keys(inputTypes).reduce(function (fields, inputTypeName) {
-      var _Object$assign2;
+      var _args3, _Object$assign2;
 
       var inputType = inputTypes[inputTypeName];
       var key = models[inputTypeName].primaryKeyAttributes[0];
@@ -141,10 +142,12 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
       }), _defineProperty(_Object$assign2, inputTypeName + 'Delete', {
         type: GraphQLInt,
         description: 'Delete a ' + inputTypeName,
-        args: _defineProperty({}, key, { type: new GraphQLNonNull(GraphQLInt) }),
-        resolve: function resolve(value, where) {
-          return models[inputTypeName].destroy({ where: where });
-        } // Returns the number of rows affected (0 or 1)
+        args: (_args3 = {}, _defineProperty(_args3, key, { type: GraphQLInt }), _defineProperty(_args3, 'where', { type: JSONType.default }), _args3),
+        resolve: function resolve(value, args) {
+          var where = {};
+          if (args['where']) where = args['where'];else if (args[key]) where = _defineProperty({}, key, args[key]);
+          return models[inputTypeName].destroy({ where: where }); // Returns the number of rows affected (0 or more)
+        }
       }), _Object$assign2));
       return toReturn;
     }, {})

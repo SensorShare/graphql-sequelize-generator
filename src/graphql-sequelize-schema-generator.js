@@ -9,7 +9,8 @@ const {
   resolver,
   attributeFields,
   defaultListArgs,
-  defaultArgs
+  defaultArgs,
+  JSONType
 } = require('graphql-sequelize')
 
 /**
@@ -166,10 +167,15 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
             type: GraphQLInt,
             description: 'Delete a ' + inputTypeName,
             args: {
-              [key]: {type: new GraphQLNonNull(GraphQLInt)}
+              [key]: {type: GraphQLInt},
+              where: {type: JSONType.default}
             },
-            resolve: (value, where) =>
-              models[inputTypeName].destroy({ where }) // Returns the number of rows affected (0 or 1)
+            resolve: (value, args) => {
+              let where = {};
+              if (args['where']) where = args['where'];
+              else if (args[key]) where = { [key]: args[key] };
+              return models[inputTypeName].destroy({ where }) // Returns the number of rows affected (0 or more)
+            }
           }
         })
         return toReturn
