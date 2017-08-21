@@ -140,6 +140,16 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
               return models[inputTypeName].create(args[inputTypeName])
             }
           },
+          [inputTypeName + 'ListCreate']: {
+            type: new GraphQLList(outputTypes[inputTypeName]), // what is returned by resolve, must be of type GraphQLObjectType
+            description: 'Create a list of ' + inputTypeName,
+            args: {
+              [inputTypeName]: {type: new GraphQLList(inputType)}
+            },
+            resolve: (source, args, context, info) => {
+              return models[inputTypeName].bulkCreate(args[inputTypeName])
+            }
+          },
           [inputTypeName + 'Update']: {
             type: outputTypes[inputTypeName],
             description: 'Update a ' + inputTypeName,

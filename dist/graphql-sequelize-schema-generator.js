@@ -115,7 +115,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
   return new GraphQLObjectType({
     name: 'Root_Mutations',
     fields: Object.keys(inputTypes).reduce(function (fields, inputTypeName) {
-      var _args3, _Object$assign2;
+      var _args4, _Object$assign2;
 
       var inputType = inputTypes[inputTypeName];
       var key = models[inputTypeName].primaryKeyAttributes[0];
@@ -125,6 +125,13 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         args: _defineProperty({}, inputTypeName, { type: inputType }),
         resolve: function resolve(source, args, context, info) {
           return models[inputTypeName].create(args[inputTypeName]);
+        }
+      }), _defineProperty(_Object$assign2, inputTypeName + 'ListCreate', {
+        type: new GraphQLList(outputTypes[inputTypeName]), // what is returned by resolve, must be of type GraphQLObjectType
+        description: 'Create a list of ' + inputTypeName,
+        args: _defineProperty({}, inputTypeName, { type: new GraphQLList(inputType) }),
+        resolve: function resolve(source, args, context, info) {
+          return models[inputTypeName].bulkCreate(args[inputTypeName]);
         }
       }), _defineProperty(_Object$assign2, inputTypeName + 'Update', {
         type: outputTypes[inputTypeName],
@@ -142,7 +149,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
       }), _defineProperty(_Object$assign2, inputTypeName + 'Delete', {
         type: GraphQLInt,
         description: 'Delete a ' + inputTypeName,
-        args: (_args3 = {}, _defineProperty(_args3, key, { type: GraphQLInt }), _defineProperty(_args3, 'where', { type: JSONType.default }), _args3),
+        args: (_args4 = {}, _defineProperty(_args4, key, { type: GraphQLInt }), _defineProperty(_args4, 'where', { type: JSONType.default }), _args4),
         resolve: function resolve(value, args) {
           var where = {};
           if (args['where']) where = args['where'];else if (args[key]) where = _defineProperty({}, key, args[key]);
