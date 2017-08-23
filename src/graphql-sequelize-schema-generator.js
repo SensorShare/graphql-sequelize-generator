@@ -154,23 +154,29 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
             type: outputTypes[inputTypeName],
             description: 'Update a ' + inputTypeName,
             args: {
-              [inputTypeName]: {type: inputType}
+              [inputTypeName]: {type: inputType},
+              where: {type: JSONType.default}
             },
             resolve: (source, args, context, info) => {
-              const where = { [key]: args[inputTypeName][key] }
-              return models[inputTypeName]
-                .update(args[inputTypeName], {
-                  where
-                })
-                .then(boolean => {
-                  // `boolean` equals the number of rows affected (0 or 1)
-                  return resolver(models[inputTypeName])(
-                    source,
-                    where,
-                    context,
-                    info
-                  )
-                })
+              if (args['where']) {
+                const where = args['where'];
+                return models[inputTypeName].update(args[inputTypeName], { where })
+              } else {
+                const where = { [key]: args[inputTypeName][key] }
+                return models[inputTypeName]
+                  .update(args[inputTypeName], {
+                    where
+                  })
+                  .then(boolean => {
+                    // `boolean` equals the number of rows affected (0 or 1)
+                    return resolver(models[inputTypeName])(
+                      source,
+                      where,
+                      context,
+                      info
+                    )
+                  })
+              }
             }
           },
           [inputTypeName + 'Delete']: {

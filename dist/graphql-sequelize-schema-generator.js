@@ -115,7 +115,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
   return new GraphQLObjectType({
     name: 'Root_Mutations',
     fields: Object.keys(inputTypes).reduce(function (fields, inputTypeName) {
-      var _args4, _Object$assign2;
+      var _args3, _args4, _Object$assign2;
 
       var inputType = inputTypes[inputTypeName];
       var key = models[inputTypeName].primaryKeyAttributes[0];
@@ -136,15 +136,20 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
       }), _defineProperty(_Object$assign2, inputTypeName + 'Update', {
         type: outputTypes[inputTypeName],
         description: 'Update a ' + inputTypeName,
-        args: _defineProperty({}, inputTypeName, { type: inputType }),
+        args: (_args3 = {}, _defineProperty(_args3, inputTypeName, { type: inputType }), _defineProperty(_args3, 'where', { type: JSONType.default }), _args3),
         resolve: function resolve(source, args, context, info) {
-          var where = _defineProperty({}, key, args[inputTypeName][key]);
-          return models[inputTypeName].update(args[inputTypeName], {
-            where: where
-          }).then(function (boolean) {
-            // `boolean` equals the number of rows affected (0 or 1)
-            return resolver(models[inputTypeName])(source, where, context, info);
-          });
+          if (args['where']) {
+            var where = args['where'];
+            return models[inputTypeName].update(args[inputTypeName], { where: where });
+          } else {
+            var _where = _defineProperty({}, key, args[inputTypeName][key]);
+            return models[inputTypeName].update(args[inputTypeName], {
+              where: _where
+            }).then(function (boolean) {
+              // `boolean` equals the number of rows affected (0 or 1)
+              return resolver(models[inputTypeName])(source, _where, context, info);
+            });
+          }
         }
       }), _defineProperty(_Object$assign2, inputTypeName + 'Delete', {
         type: GraphQLInt,
