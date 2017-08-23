@@ -138,18 +138,14 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         description: 'Update a ' + inputTypeName,
         args: (_args3 = {}, _defineProperty(_args3, inputTypeName, { type: inputType }), _defineProperty(_args3, 'where', { type: JSONType.default }), _args3),
         resolve: function resolve(source, args, context, info) {
-          if (args['where']) {
-            var where = args['where'];
-            return models[inputTypeName].update(args[inputTypeName], { where: where });
-          } else {
-            var _where = _defineProperty({}, key, args[inputTypeName][key]);
-            return models[inputTypeName].update(args[inputTypeName], {
-              where: _where
-            }).then(function (boolean) {
-              // `boolean` equals the number of rows affected (0 or 1)
-              return resolver(models[inputTypeName])(source, _where, context, info);
-            });
-          }
+          var where = args['where'] ? args['where'] : _defineProperty({}, key, args[inputTypeName][key]);
+          var resolveWhere = args['where'] ? Object.assign({}, where, args[inputTypeName]) : where;
+          return models[inputTypeName].update(args[inputTypeName], {
+            where: where
+          }).then(function (boolean) {
+            // `boolean` equals the number of rows affected (0 or 1)
+            return resolver(models[inputTypeName])(source, resolveWhere, context, info);
+          });
         }
       }), _defineProperty(_Object$assign2, inputTypeName + 'Delete', {
         type: GraphQLInt,

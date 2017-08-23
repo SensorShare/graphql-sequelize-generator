@@ -159,7 +159,7 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
             },
             resolve: (source, args, context, info) => {
               const where = (args['where']) ? args['where'] : { [key]: args[inputTypeName][key] }
-              const resolveWhere = (args['where']) ? Object.assign(where, args[inputTypeName]) : where
+              const resolveWhere = (args['where']) ? Object.assign({}, where, args[inputTypeName]) : where
               return models[inputTypeName]
                 .update(args[inputTypeName], {
                   where
