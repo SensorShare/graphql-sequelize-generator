@@ -129,7 +129,17 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
       (fields, inputTypeName) => {
         const inputType = inputTypes[inputTypeName]
         const key = models[inputTypeName].primaryKeyAttributes[0]
-        const toReturn = Object.assign(fields, {
+        if (models[inputTypeName].options.readOnly) {
+          return Object.assign(fields, {});
+        }
+        if (!models[inputTypeName].authorize) {
+          models[inputTypeName].authorize = function() {
+            return new Promise((resolve, reject) => {
+              resolve(true);
+            })
+          }
+        }
+        const toReturn = Object.assign(fields, models[inputTypeName].options.updateOnly ? {} : {
           [inputTypeName + 'Create']: {
             type: outputTypes[inputTypeName], // what is returned by resolve, must be of type GraphQLObjectType
             description: 'Create a ' + inputTypeName,
@@ -137,7 +147,10 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
               [inputTypeName]: {type: inputType}
             },
             resolve: (source, args, context, info) => {
-              return models[inputTypeName].create(args[inputTypeName])
+              return models[inputTypeName].authorize(args, context)
+                .then((result) => {
+                  return models[inputTypeName].create(args[inputTypeName])
+                })
             }
           },
           [inputTypeName + 'ListCreate']: {
@@ -147,9 +160,13 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
               [inputTypeName]: {type: new GraphQLList(inputType)}
             },
             resolve: (source, args, context, info) => {
-              return models[inputTypeName].bulkCreate(args[inputTypeName])
+              return models[inputTypeName].authorize(args, context)
+                .then((result) => {
+                  return models[inputTypeName].bulkCreate(args[inputTypeName])
+                })
             }
           },
+        }, {
           [inputTypeName + 'Update']: {
             type: outputTypes[inputTypeName],
             description: 'Update a ' + inputTypeName,
@@ -160,9 +177,9 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
             resolve: (source, args, context, info) => {
               const where = (args['where']) ? args['where'] : { [key]: args[inputTypeName][key] }
               const resolveWhere = (args['where']) ? Object.assign({}, where, args[inputTypeName]) : where
-              return models[inputTypeName]
-                .update(args[inputTypeName], {
-                  where
+              return models[inputTypeName].authorize(args, context)
+                .then((result) => {
+                  return models[inputTypeName].update(args[inputTypeName], { where })
                 })
                 .then(boolean => {
                   // `boolean` equals the number of rows affected (0 or 1)
@@ -175,6 +192,7 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
                 })
             }
           },
+        }, models[inputTypeName].options.updateOnly ? {} : {
           [inputTypeName + 'Delete']: {
             type: GraphQLInt,
             description: 'Delete a ' + inputTypeName,
@@ -182,11 +200,14 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
               [key]: {type: GraphQLInt},
               where: {type: JSONType.default}
             },
-            resolve: (value, args) => {
+            resolve: (value, args, context, info) => {
               let where = {};
               if (args['where']) where = args['where'];
               else if (args[key]) where = { [key]: args[key] };
-              return models[inputTypeName].destroy({ where }) // Returns the number of rows affected (0 or more)
+              return models[inputTypeName].authorize(args, context)
+                .then((result) => {
+                  models[inputTypeName].destroy({ where }) // Returns the number of rows affected (0 or more)
+                });
             }
           }
         })

@@ -115,48 +115,64 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
   return new GraphQLObjectType({
     name: 'Root_Mutations',
     fields: Object.keys(inputTypes).reduce(function (fields, inputTypeName) {
-      var _args3, _args4, _Object$assign2;
+      var _ref, _args3, _args4;
 
       var inputType = inputTypes[inputTypeName];
       var key = models[inputTypeName].primaryKeyAttributes[0];
-      var toReturn = Object.assign(fields, (_Object$assign2 = {}, _defineProperty(_Object$assign2, inputTypeName + 'Create', {
+      if (models[inputTypeName].options.readOnly) {
+        return Object.assign(fields, {});
+      }
+      if (!models[inputTypeName].authorize) {
+        models[inputTypeName].authorize = function () {
+          return new Promise(function (resolve, reject) {
+            resolve(true);
+          });
+        };
+      }
+      var toReturn = Object.assign(fields, models[inputTypeName].options.updateOnly ? {} : (_ref = {}, _defineProperty(_ref, inputTypeName + 'Create', {
         type: outputTypes[inputTypeName], // what is returned by resolve, must be of type GraphQLObjectType
         description: 'Create a ' + inputTypeName,
         args: _defineProperty({}, inputTypeName, { type: inputType }),
         resolve: function resolve(source, args, context, info) {
-          return models[inputTypeName].create(args[inputTypeName]);
+          return models[inputTypeName].authorize(args, context).then(function (result) {
+            return models[inputTypeName].create(args[inputTypeName]);
+          });
         }
-      }), _defineProperty(_Object$assign2, inputTypeName + 'ListCreate', {
+      }), _defineProperty(_ref, inputTypeName + 'ListCreate', {
         type: new GraphQLList(outputTypes[inputTypeName]), // what is returned by resolve, must be of type GraphQLObjectType
         description: 'Create a list of ' + inputTypeName,
         args: _defineProperty({}, inputTypeName, { type: new GraphQLList(inputType) }),
         resolve: function resolve(source, args, context, info) {
-          return models[inputTypeName].bulkCreate(args[inputTypeName]);
+          return models[inputTypeName].authorize(args, context).then(function (result) {
+            return models[inputTypeName].bulkCreate(args[inputTypeName]);
+          });
         }
-      }), _defineProperty(_Object$assign2, inputTypeName + 'Update', {
+      }), _ref), _defineProperty({}, inputTypeName + 'Update', {
         type: outputTypes[inputTypeName],
         description: 'Update a ' + inputTypeName,
         args: (_args3 = {}, _defineProperty(_args3, inputTypeName, { type: inputType }), _defineProperty(_args3, 'where', { type: JSONType.default }), _args3),
         resolve: function resolve(source, args, context, info) {
           var where = args['where'] ? args['where'] : _defineProperty({}, key, args[inputTypeName][key]);
           var resolveWhere = args['where'] ? Object.assign({}, where, args[inputTypeName]) : where;
-          return models[inputTypeName].update(args[inputTypeName], {
-            where: where
+          return models[inputTypeName].authorize(args, context).then(function (result) {
+            return models[inputTypeName].update(args[inputTypeName], { where: where });
           }).then(function (boolean) {
             // `boolean` equals the number of rows affected (0 or 1)
             return resolver(models[inputTypeName])(source, resolveWhere, context, info);
           });
         }
-      }), _defineProperty(_Object$assign2, inputTypeName + 'Delete', {
+      }), models[inputTypeName].options.updateOnly ? {} : _defineProperty({}, inputTypeName + 'Delete', {
         type: GraphQLInt,
         description: 'Delete a ' + inputTypeName,
         args: (_args4 = {}, _defineProperty(_args4, key, { type: GraphQLInt }), _defineProperty(_args4, 'where', { type: JSONType.default }), _args4),
-        resolve: function resolve(value, args) {
+        resolve: function resolve(value, args, context, info) {
           var where = {};
           if (args['where']) where = args['where'];else if (args[key]) where = _defineProperty({}, key, args[key]);
-          return models[inputTypeName].destroy({ where: where }); // Returns the number of rows affected (0 or more)
+          return models[inputTypeName].authorize(args, context).then(function (result) {
+            models[inputTypeName].destroy({ where: where }); // Returns the number of rows affected (0 or more)
+          });
         }
-      }), _Object$assign2));
+      }));
       return toReturn;
     }, {})
   });
