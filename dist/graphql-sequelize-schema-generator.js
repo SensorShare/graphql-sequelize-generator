@@ -107,7 +107,9 @@ var generateQueryRootType = function generateQueryRootType(models, outputTypes, 
         args: Object.assign(defaultArgs(models[modelType.name]), defaultListArgs()),
         resolve: resolver(models[modelType.name], {
           after: function after(results) {
-            options.logging('Results: ' + JSON.stringify(results, null, 2));
+            if (models[inputTypeName].options.log === 'true') {
+              options.logging('Results: ' + JSON.stringify(results, null, 2));
+            }
             return results;
           }
         })
@@ -142,7 +144,9 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
           return models[inputTypeName].authorize(args, context).then(function (result) {
             return models[inputTypeName].create(args[inputTypeName]);
           }).then(function (result) {
-            options.logging('Results: ' + JSON.stringify(results, null, 2));
+            if (models[inputTypeName].options.log === 'true') {
+              options.logging('Results: ' + JSON.stringify(results, null, 2));
+            }
             return result;
           });
         }
@@ -154,7 +158,9 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
           return models[inputTypeName].authorize(args, context).then(function (result) {
             return models[inputTypeName].bulkCreate(args[inputTypeName]);
           }).then(function (result) {
-            options.logging('Results: ' + JSON.stringify(results, null, 2));
+            if (models[inputTypeName].options.log === 'true') {
+              options.logging('Results: ' + JSON.stringify(results, null, 2));
+            }
             return result;
           });
         }
@@ -171,7 +177,9 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
             // `boolean` equals the number of rows affected (0 or 1)
             return resolver(models[inputTypeName], {
               after: function after(results) {
-                options.logging('Results: ' + JSON.stringify(results, null, 2));
+                if (models[inputTypeName].options.log === 'true') {
+                  options.logging('Results: ' + JSON.stringify(results, null, 2));
+                }
                 return results;
               }
             })(source, resolveWhere, context, info);
