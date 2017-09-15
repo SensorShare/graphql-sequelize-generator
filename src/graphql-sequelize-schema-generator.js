@@ -100,7 +100,7 @@ const generateModelTypes = models => {
  * from Sequelize models.
  * @param {*} models The sequelize models used to create the root `GraphQLSchema`
  */
-const generateQueryRootType = (models, outputTypes, custom) => {
+const generateQueryRootType = (models, outputTypes, options) => {
   return new GraphQLObjectType({
     name: 'Root_Query',
     fields: Object.keys(outputTypes).reduce(
@@ -113,16 +113,21 @@ const generateQueryRootType = (models, outputTypes, custom) => {
               defaultArgs(models[modelType.name]),
               defaultListArgs()
             ),
-            resolve: resolver(models[modelType.name])
+            resolve: resolver(models[modelType.name], {
+              after: (results) => {
+                options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                return results;
+              }
+            })
           }
         })
       },
-      custom || {}
+      options.custom || {}
     )
   })
 }
 
-const generateMutationRootType = (models, inputTypes, outputTypes) => {
+const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
   return new GraphQLObjectType({
     name: 'Root_Mutations',
     fields: Object.keys(inputTypes).reduce(
@@ -150,6 +155,9 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
               return models[inputTypeName].authorize(args, context)
                 .then((result) => {
                   return models[inputTypeName].create(args[inputTypeName])
+                }).then((result) => {
+                  options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                  return result;
                 })
             }
           },
@@ -163,7 +171,10 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
               return models[inputTypeName].authorize(args, context)
                 .then((result) => {
                   return models[inputTypeName].bulkCreate(args[inputTypeName])
-                })
+                }).then((result) => {
+                  options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                  return result;
+                });
             }
           },
         }, {
@@ -183,12 +194,12 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
                 })
                 .then(boolean => {
                   // `boolean` equals the number of rows affected (0 or 1)
-                  return resolver(models[inputTypeName])(
-                    source,
-                    resolveWhere,
-                    context,
-                    info
-                  )
+                  return resolver(models[inputTypeName], {
+                    after: (results) => {
+                      options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                      return results;
+                    }
+                  })(source, resolveWhere, context, info)
                 })
             }
           },
@@ -219,14 +230,18 @@ const generateMutationRootType = (models, inputTypes, outputTypes) => {
 }
 
 // This function is exported
-const generateSchema = (models, types, custom) => {
+const generateSchema = (models, types, options) => {
+  options = options || {};
+
+  const loggging = (typeof options.logging === 'function') ? options.logging : (msg) => undefined;
   const modelTypes = types || generateModelTypes(models)
   return {
-    query: generateQueryRootType(models, modelTypes.outputTypes, custom),
+    query: generateQueryRootType(models, modelTypes.outputTypes, options),
     mutation: generateMutationRootType(
       models,
       modelTypes.inputTypes,
-      modelTypes.outputTypes
+      modelTypes.outputTypes,
+      options
     )
   }
 }

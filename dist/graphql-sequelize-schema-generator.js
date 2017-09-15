@@ -97,7 +97,7 @@ var generateModelTypes = function generateModelTypes(models) {
  * from Sequelize models.
  * @param {*} models The sequelize models used to create the root `GraphQLSchema`
  */
-var generateQueryRootType = function generateQueryRootType(models, outputTypes, custom) {
+var generateQueryRootType = function generateQueryRootType(models, outputTypes, options) {
   return new GraphQLObjectType({
     name: 'Root_Query',
     fields: Object.keys(outputTypes).reduce(function (fields, modelTypeName) {
@@ -105,13 +105,18 @@ var generateQueryRootType = function generateQueryRootType(models, outputTypes, 
       return Object.assign(fields, _defineProperty({}, modelType.name, {
         type: new GraphQLList(modelType),
         args: Object.assign(defaultArgs(models[modelType.name]), defaultListArgs()),
-        resolve: resolver(models[modelType.name])
+        resolve: resolver(models[modelType.name], {
+          after: function after(results) {
+            options.logging('Results: ' + JSON.stringify(results, null, 2));
+            return results;
+          }
+        })
       }));
-    }, custom || {})
+    }, options.custom || {})
   });
 };
 
-var generateMutationRootType = function generateMutationRootType(models, inputTypes, outputTypes) {
+var generateMutationRootType = function generateMutationRootType(models, inputTypes, outputTypes, options) {
   return new GraphQLObjectType({
     name: 'Root_Mutations',
     fields: Object.keys(inputTypes).reduce(function (fields, inputTypeName) {
@@ -136,6 +141,9 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         resolve: function resolve(source, args, context, info) {
           return models[inputTypeName].authorize(args, context).then(function (result) {
             return models[inputTypeName].create(args[inputTypeName]);
+          }).then(function (result) {
+            options.logging('Results: ' + JSON.stringify(results, null, 2));
+            return result;
           });
         }
       }), _defineProperty(_ref, inputTypeName + 'ListCreate', {
@@ -145,6 +153,9 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         resolve: function resolve(source, args, context, info) {
           return models[inputTypeName].authorize(args, context).then(function (result) {
             return models[inputTypeName].bulkCreate(args[inputTypeName]);
+          }).then(function (result) {
+            options.logging('Results: ' + JSON.stringify(results, null, 2));
+            return result;
           });
         }
       }), _ref), _defineProperty({}, inputTypeName + 'Update', {
@@ -158,7 +169,12 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
             return models[inputTypeName].update(args[inputTypeName], { where: where });
           }).then(function (boolean) {
             // `boolean` equals the number of rows affected (0 or 1)
-            return resolver(models[inputTypeName])(source, resolveWhere, context, info);
+            return resolver(models[inputTypeName], {
+              after: function after(results) {
+                options.logging('Results: ' + JSON.stringify(results, null, 2));
+                return results;
+              }
+            })(source, resolveWhere, context, info);
           });
         }
       }), models[inputTypeName].options.updateOnly ? {} : _defineProperty({}, inputTypeName + 'Delete', {
@@ -179,11 +195,16 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
 };
 
 // This function is exported
-var generateSchema = function generateSchema(models, types, custom) {
+var generateSchema = function generateSchema(models, types, options) {
+  options = options || {};
+
+  var loggging = typeof options.logging === 'function' ? options.logging : function (msg) {
+    return undefined;
+  };
   var modelTypes = types || generateModelTypes(models);
   return {
-    query: generateQueryRootType(models, modelTypes.outputTypes, custom),
-    mutation: generateMutationRootType(models, modelTypes.inputTypes, modelTypes.outputTypes)
+    query: generateQueryRootType(models, modelTypes.outputTypes, options),
+    mutation: generateMutationRootType(models, modelTypes.inputTypes, modelTypes.outputTypes, options)
   };
 };
 
