@@ -107,7 +107,7 @@ var generateQueryRootType = function generateQueryRootType(models, outputTypes, 
         args: Object.assign(defaultArgs(models[modelType.name]), defaultListArgs()),
         resolve: resolver(models[modelType.name], {
           after: function after(results) {
-            if (models[inputTypeName].options.log === 'true') {
+            if (models[modelType.name].options.log === 'true') {
               options.logging('Results: ' + JSON.stringify(results, null, 2));
             }
             return results;
