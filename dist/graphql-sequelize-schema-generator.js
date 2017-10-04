@@ -143,7 +143,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         resolve: function resolve(source, args, context, info) {
           return models[inputTypeName].authorize(args, context).then(function (result) {
             return models[inputTypeName].create(args[inputTypeName]);
-          }).then(function (result) {
+          }).then(function (results) {
             if (models[inputTypeName].options.log === 'true') {
               options.logging('Results: ' + JSON.stringify(results, null, 2));
             }
@@ -155,13 +155,13 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         description: 'Create a list of ' + inputTypeName,
         args: _defineProperty({}, inputTypeName, { type: new GraphQLList(inputType) }),
         resolve: function resolve(source, args, context, info) {
-          return models[inputTypeName].authorize(args, context).then(function (result) {
+          return models[inputTypeName].authorize(args, context).then(function () {
             return models[inputTypeName].bulkCreate(args[inputTypeName]);
-          }).then(function (result) {
+          }).then(function (results) {
             if (models[inputTypeName].options.log === 'true') {
               options.logging('Results: ' + JSON.stringify(results, null, 2));
             }
-            return result;
+            return results;
           });
         }
       }), _ref), _defineProperty({}, inputTypeName + 'Update', {

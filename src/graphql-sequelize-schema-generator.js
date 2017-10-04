@@ -157,7 +157,7 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
               return models[inputTypeName].authorize(args, context)
                 .then((result) => {
                   return models[inputTypeName].create(args[inputTypeName])
-                }).then((result) => {
+                }).then((results) => {
                   if (models[inputTypeName].options.log === 'true') {
                     options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
                   }
@@ -173,13 +173,13 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
             },
             resolve: (source, args, context, info) => {
               return models[inputTypeName].authorize(args, context)
-                .then((result) => {
+                .then(() => {
                   return models[inputTypeName].bulkCreate(args[inputTypeName])
-                }).then((result) => {
+                }).then((results) => {
                   if (models[inputTypeName].options.log === 'true') {
                     options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
                   }
-                  return result;
+                  return results;
                 });
             }
           },
