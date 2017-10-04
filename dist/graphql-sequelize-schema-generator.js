@@ -141,13 +141,13 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         description: 'Create a ' + inputTypeName,
         args: _defineProperty({}, inputTypeName, { type: inputType }),
         resolve: function resolve(source, args, context, info) {
-          return models[inputTypeName].authorize(args, context).then(function (result) {
+          return models[inputTypeName].authorize(args, context).then(function () {
             return models[inputTypeName].create(args[inputTypeName]);
           }).then(function (results) {
             if (models[inputTypeName].options.log === 'true') {
               options.logging('Results: ' + JSON.stringify(results, null, 2));
             }
-            return result;
+            return results;
           });
         }
       }), _defineProperty(_ref, inputTypeName + 'ListCreate', {
@@ -171,7 +171,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         resolve: function resolve(source, args, context, info) {
           var where = args['where'] ? args['where'] : _defineProperty({}, key, args[inputTypeName][key]);
           var resolveWhere = args['where'] ? Object.assign({}, where, args[inputTypeName]) : where;
-          return models[inputTypeName].authorize(args, context).then(function (result) {
+          return models[inputTypeName].authorize(args, context).then(function () {
             return models[inputTypeName].update(args[inputTypeName], { where: where });
           }).then(function (boolean) {
             // `boolean` equals the number of rows affected (0 or 1)
@@ -192,7 +192,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
         resolve: function resolve(value, args, context, info) {
           var where = {};
           if (args['where']) where = args['where'];else if (args[key]) where = _defineProperty({}, key, args[key]);
-          return models[inputTypeName].authorize(args, context).then(function (result) {
+          return models[inputTypeName].authorize(args, context).then(function () {
             models[inputTypeName].destroy({ where: where }); // Returns the number of rows affected (0 or more)
           });
         }

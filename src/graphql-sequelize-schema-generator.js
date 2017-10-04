@@ -155,13 +155,13 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
             },
             resolve: (source, args, context, info) => {
               return models[inputTypeName].authorize(args, context)
-                .then((result) => {
+                .then(() => {
                   return models[inputTypeName].create(args[inputTypeName])
                 }).then((results) => {
                   if (models[inputTypeName].options.log === 'true') {
                     options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
                   }
-                  return result;
+                  return results;
                 })
             }
           },
@@ -195,7 +195,7 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
               const where = (args['where']) ? args['where'] : { [key]: args[inputTypeName][key] }
               const resolveWhere = (args['where']) ? Object.assign({}, where, args[inputTypeName]) : where
               return models[inputTypeName].authorize(args, context)
-                .then((result) => {
+                .then(() => {
                   return models[inputTypeName].update(args[inputTypeName], { where })
                 })
                 .then(boolean => {
@@ -224,7 +224,7 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
               if (args['where']) where = args['where'];
               else if (args[key]) where = { [key]: args[key] };
               return models[inputTypeName].authorize(args, context)
-                .then((result) => {
+                .then(() => {
                   models[inputTypeName].destroy({ where }) // Returns the number of rows affected (0 or more)
                 });
             }
