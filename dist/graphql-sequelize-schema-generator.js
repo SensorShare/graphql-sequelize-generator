@@ -180,6 +180,9 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
                 if (models[inputTypeName].options.log === 'true') {
                   options.logging('Results: ' + JSON.stringify(results, null, 2));
                 }
+                if (models[inputTypeName].after) {
+                  return models[inputTypeName].after(args[inputTypeName], results);
+                }
                 return results;
               }
             })(source, resolveWhere, context, info);
