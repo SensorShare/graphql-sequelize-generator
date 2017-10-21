@@ -147,6 +147,9 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
             if (models[inputTypeName].options.log === 'true') {
               options.logging('Results: ' + JSON.stringify(results, null, 2));
             }
+            if (models[inputTypeName].afterCreate) {
+              models[inputTypeName].afterCreate(args[inputTypeName], context, results);
+            }
             return results;
           });
         }
@@ -180,8 +183,8 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
                 if (models[inputTypeName].options.log === 'true') {
                   options.logging('Results: ' + JSON.stringify(results, null, 2));
                 }
-                if (models[inputTypeName].after) {
-                  return models[inputTypeName].after(args[inputTypeName], results);
+                if (models[inputTypeName].afterUpdate) {
+                  models[inputTypeName].afterUpdate(args[inputTypeName], context, results);
                 }
                 return results;
               }
