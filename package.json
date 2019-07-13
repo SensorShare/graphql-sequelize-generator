@@ -1,6 +1,6 @@
 {
   "name": "graphql-sequelize-schema-generator",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "A helper function to automatically generate `GraphQLSchema` from Sequelize models.",
   "main": "index.js",
   "scripts": {
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/rpellerin/graphql-sequelize-schema-generator#readme",
   "dependencies": {
-    "graphql": "^0.13.0",
+    "graphql": "^14.4.2",
     "graphql-relay": "^0.6.0",
     "graphql-sequelize": "^9.3.6",
     "sequelize": "^5.10.0"
@@ -50,7 +50,7 @@
     "stringifier": "^2.0.0"
   },
   "peerDependencies": {
-    "graphql": "^0.13.0",
+    "graphql": "^14.4.2",
     "sequelize": "^5.10.0"
   },
   "jest": {
