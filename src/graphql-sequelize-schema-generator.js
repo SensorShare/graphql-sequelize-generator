@@ -2,8 +2,7 @@ const {
   GraphQLObjectType,
   GraphQLInputObjectType,
   GraphQLList,
-  GraphQLInt,
-  GraphQLNonNull
+  GraphQLInt
 } = require('graphql')
 const {
   resolver,
@@ -23,8 +22,8 @@ const {
  * @param {*} types Existing `GraphQLObjectType` types, created from all the Sequelize models
  */
 const generateAssociationFields = (associations, types, isInput = false) => {
-  let fields = {}
-  for (let associationName in associations) {
+  const fields = {}
+  for (const associationName in associations) {
     const relation = associations[associationName]
     // BelongsToMany is represented as a list, just like HasMany
     const type = relation.associationType === 'BelongsToMany' ||
@@ -74,11 +73,12 @@ const generateGraphQLType = (model, types, isInput = false) => {
  */
 // This function is exported
 const generateModelTypes = models => {
-  let outputTypes = {}
-  let inputTypes = {}
-  for (let modelName in models) {
+  const outputTypes = {}
+  const inputTypes = {}
+  for (const modelName in models) {
     // Only our models, not Sequelize nor sequelize
-    if (models[modelName].hasOwnProperty('name') && modelName !== 'Sequelize') {
+    const hasProperty = Object.prototype.hasOwnProperty.call(models[modelName], 'name')
+    if (hasProperty && modelName !== 'Sequelize') {
       outputTypes[modelName] = generateGraphQLType(
         models[modelName],
         outputTypes
@@ -90,7 +90,7 @@ const generateModelTypes = models => {
       )
     }
   }
-  return {outputTypes, inputTypes}
+  return { outputTypes, inputTypes }
 }
 
 /**
@@ -116,9 +116,9 @@ const generateQueryRootType = (models, outputTypes, options) => {
             resolve: resolver(models[modelType.name], {
               after: (results) => {
                 if (models[modelType.name].options.log === 'true') {
-                  options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                  options.logging(`Results: ${JSON.stringify(results, null, 2)}`)
                 }
-                return results;
+                return results
               }
             })
           }
@@ -137,12 +137,12 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
         const inputType = inputTypes[inputTypeName]
         const key = models[inputTypeName].primaryKeyAttributes[0]
         if (models[inputTypeName].options.readOnly) {
-          return Object.assign(fields, {});
+          return Object.assign(fields, {})
         }
         if (!models[inputTypeName].authorize) {
-          models[inputTypeName].authorize = function() {
+          models[inputTypeName].authorize = () => {
             return new Promise((resolve, reject) => {
-              resolve(true);
+              resolve(true)
             })
           }
         }
@@ -151,7 +151,7 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
             type: outputTypes[inputTypeName], // what is returned by resolve, must be of type GraphQLObjectType
             description: 'Create a ' + inputTypeName,
             args: {
-              [inputTypeName]: {type: inputType}
+              [inputTypeName]: { type: inputType }
             },
             resolve: (source, args, context, info) => {
               return models[inputTypeName].authorize(args, context)
@@ -159,12 +159,12 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
                   return models[inputTypeName].create(args[inputTypeName])
                 }).then((results) => {
                   if (models[inputTypeName].options.log === 'true') {
-                    options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                    options.logging(`Results: ${JSON.stringify(results, null, 2)}`)
                   }
                   if (models[inputTypeName].afterCreate) {
-                    models[inputTypeName].afterCreate(args[inputTypeName], context, results);
+                    models[inputTypeName].afterCreate(args[inputTypeName], context, results)
                   }
-                  return results;
+                  return results
                 })
             }
           },
@@ -172,7 +172,7 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
             type: new GraphQLList(outputTypes[inputTypeName]), // what is returned by resolve, must be of type GraphQLObjectType
             description: 'Create a list of ' + inputTypeName,
             args: {
-              [inputTypeName]: {type: new GraphQLList(inputType)}
+              [inputTypeName]: { type: new GraphQLList(inputType) }
             },
             resolve: (source, args, context, info) => {
               return models[inputTypeName].authorize(args, context)
@@ -180,19 +180,19 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
                   return models[inputTypeName].bulkCreate(args[inputTypeName])
                 }).then((results) => {
                   if (models[inputTypeName].options.log === 'true') {
-                    options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                    options.logging(`Results: ${JSON.stringify(results, null, 2)}`)
                   }
-                  return results;
-                });
+                  return results
+                })
             }
-          },
+          }
         }, {
           [inputTypeName + 'Update']: {
             type: outputTypes[inputTypeName],
             description: 'Update a ' + inputTypeName,
             args: {
-              [inputTypeName]: {type: inputType},
-              where: {type: JSONType.default}
+              [inputTypeName]: { type: inputType },
+              where: { type: JSONType.default }
             },
             resolve: (source, args, context, info) => {
               const where = (args['where']) ? args['where'] : { [key]: args[inputTypeName][key] }
@@ -206,33 +206,33 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
                   return resolver(models[inputTypeName], {
                     after: (results) => {
                       if (models[inputTypeName].options.log === 'true') {
-                        options.logging(`Results: ${JSON.stringify(results, null, 2)}`);
+                        options.logging(`Results: ${JSON.stringify(results, null, 2)}`)
                       }
                       if (models[inputTypeName].afterUpdate) {
-                        models[inputTypeName].afterUpdate(args[inputTypeName], context, results);
+                        models[inputTypeName].afterUpdate(args[inputTypeName], context, results)
                       }
-                      return results;
+                      return results
                     }
                   })(source, resolveWhere, context, info)
                 })
             }
-          },
+          }
         }, models[inputTypeName].options.updateOnly ? {} : {
           [inputTypeName + 'Delete']: {
             type: GraphQLInt,
             description: 'Delete a ' + inputTypeName,
             args: {
-              [key]: {type: GraphQLInt},
-              where: {type: JSONType.default}
+              [key]: { type: GraphQLInt },
+              where: { type: JSONType.default }
             },
             resolve: (value, args, context, info) => {
-              let where = {};
-              if (args['where']) where = args['where'];
-              else if (args[key]) where = { [key]: args[key] };
+              let where = {}
+              if (args['where']) where = args['where']
+              else if (args[key]) where = { [key]: args[key] }
               return models[inputTypeName].authorize(args, context)
                 .then(() => {
                   models[inputTypeName].destroy({ where }) // Returns the number of rows affected (0 or more)
-                });
+                })
             }
           }
         })
@@ -245,9 +245,9 @@ const generateMutationRootType = (models, inputTypes, outputTypes, options) => {
 
 // This function is exported
 const generateSchema = (models, types, options) => {
-  options = options || {};
+  options = options || {}
 
-  const loggging = (typeof options.logging === 'function') ? options.logging : (msg) => undefined;
+  // const loggging = (typeof options.logging === 'function') ? options.logging : (msg) => undefined;
   const modelTypes = types || generateModelTypes(models)
   return {
     query: generateQueryRootType(models, modelTypes.outputTypes, options),

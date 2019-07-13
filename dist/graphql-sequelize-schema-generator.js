@@ -6,8 +6,7 @@ var _require = require('graphql'),
     GraphQLObjectType = _require.GraphQLObjectType,
     GraphQLInputObjectType = _require.GraphQLInputObjectType,
     GraphQLList = _require.GraphQLList,
-    GraphQLInt = _require.GraphQLInt,
-    GraphQLNonNull = _require.GraphQLNonNull;
+    GraphQLInt = _require.GraphQLInt;
 
 var _require2 = require('graphql-sequelize'),
     resolver = _require2.resolver,
@@ -82,7 +81,8 @@ var generateModelTypes = function generateModelTypes(models) {
   var inputTypes = {};
   for (var modelName in models) {
     // Only our models, not Sequelize nor sequelize
-    if (models[modelName].hasOwnProperty('name') && modelName !== 'Sequelize') {
+    var hasProperty = Object.prototype.hasOwnProperty.call(models[modelName], 'name');
+    if (hasProperty && modelName !== 'Sequelize') {
       outputTypes[modelName] = generateGraphQLType(models[modelName], outputTypes);
       inputTypes[modelName] = generateGraphQLType(models[modelName], inputTypes, true);
     }
@@ -212,9 +212,7 @@ var generateMutationRootType = function generateMutationRootType(models, inputTy
 var generateSchema = function generateSchema(models, types, options) {
   options = options || {};
 
-  var loggging = typeof options.logging === 'function' ? options.logging : function (msg) {
-    return undefined;
-  };
+  // const loggging = (typeof options.logging === 'function') ? options.logging : (msg) => undefined;
   var modelTypes = types || generateModelTypes(models);
   return {
     query: generateQueryRootType(models, modelTypes.outputTypes, options),
