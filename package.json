@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/SensorShare/graphql-sequelize-generator#readme",
   "dependencies": {
-    "graphql": "~14.4.2",
+    "graphql": "^14.4.2",
     "graphql-relay": "~0.6.0",
     "graphql-sequelize": "~9.3.6",
     "sequelize": "~5.16.0"
@@ -50,7 +50,7 @@
     "stringifier": "^2.0.0"
   },
   "peerDependencies": {
-    "graphql": "~14.4.2",
+    "graphql": "^14.4.2",
     "sequelize": "~5.16.0"
   },
   "jest": {
