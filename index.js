@@ -1,1 +1,1 @@
-module.exports = require('./dist/graphql-sequelize-schema-generator')
+module.exports = require('./dist/graphql-sequelize-generator')

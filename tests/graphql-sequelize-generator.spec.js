@@ -1,5 +1,5 @@
-const graphqlSchemaGenerator = require('../src/graphql-sequelize-schema-generator').generateSchema
-const graphqlSchemaGenerator_build = require('../dist/graphql-sequelize-schema-generator').generateSchema
+const graphqlSchemaGenerator = require('../src/graphql-sequelize-generator').generateSchema
+const graphqlSchemaGenerator_build = require('../dist/graphql-sequelize-generator').generateSchema
 const stringifier = require('stringifier')({ maxDepth: 10, indent: '  ' })
 const models = require('./models')
 
